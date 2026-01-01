@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro Workflow - Playbook Completo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        .playbook-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .playbook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .playbook-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .playbook-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .playbook-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+        }
+
+        .card-number {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .card-description {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card-link {
+            color: var(--primary);
+            text-decoration: none;
+            padding: 0.75rem;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 0.5rem;
+            border-left: 3px solid var(--primary);
+            transition: all 0.2s;
+        }
+
+        .card-link:hover {
+            background: rgba(37, 99, 235, 0.2);
+            padding-left: 1.5rem;
+        }
+
+        .quick-nav {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            border: 1px solid var(--border);
+        }
+
+        .quick-nav h2 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .stat-item {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .playbook-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎭 Maestro Workflow</h1>
+        <p class="subtitle">Playbook Completo do Sistema</p>
+    </header>
+
+    <div class="container">
+        <div class="quick-nav">
+            <h2>🚀 Navegação Rápida</h2>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn">📋 Documentação Completa</a>
+                <a href="../README.md" class="nav-btn">📖 README</a>
+                <a href="DOCUMENTATION_INDEX.md" class="nav-btn">📚 Índice</a>
+                <a href="QUICK_START.md" class="nav-btn">⚡ Quick Start</a>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">30+</div>
+                <div class="stat-label">Endpoints API</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">11</div>
+                <div class="stat-label">Agentes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Testes Passando</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Documentos</div>
+            </div>
+        </div>
+
+        <div class="playbook-grid">
+            <div class="playbook-card">
+                <div class="card-number">1</div>
+                <div class="card-icon">🚀</div>
+                <h3 class="card-title">Início Rápido</h3>
+                <p class="card-description">Comece a usar o Maestro Workflow em minutos</p>
+                <div class="card-links">
+                    <a href="QUICK_START.md" class="card-link">⚡ Quick Start Guide</a>
+                    <a href="ONBOARDING.md" class="card-link">👋 Guia de Onboarding</a>
+                    <a href="../README.md" class="card-link">📖 README Principal</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">2</div>
+                <div class="card-icon">🏗️</div>
+                <h3 class="card-title">Arquitetura</h3>
+                <p class="card-description">Entenda a estrutura e design do sistema</p>
+                <div class="card-links">
+                    <a href="BACKEND_ARCHITECTURE.md" class="card-link">🏛️ Arquitetura Backend</a>
+                    <a href="PROCESS_MAPPING.md" class="card-link">🗺️ Mapeamento de Processos</a>
+                    <a href="WORKFLOW_DIAGRAM.md" class="card-link">🔄 Diagrama do Workflow</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">3</div>
+                <div class="card-icon">🤖</div>
+                <h3 class="card-title">Agentes</h3>
+                <p class="card-description">Conheça todos os agentes especializados</p>
+                <div class="card-links">
+                    <a href="IMPLEMENTATION_AGENT.md" class="card-link">🔄 Implementation Agent</a>
+                    <a href="PRODUCT_MANAGER_AGENT.md" class="card-link">📋 Product Manager</a>
+                    <a href="TEST_EXECUTION_AGENT.md" class="card-link">🧪 Test Execution</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">4</div>
+                <div class="card-icon">🔥</div>
+                <h3 class="card-title">Firebase</h3>
+                <p class="card-description">Integração e sincronização em tempo real</p>
+                <div class="card-links">
+                    <a href="FIREBASE_INTEGRATION.md" class="card-link">🔥 Integração Firebase</a>
+                    <a href="FIRESTORE_BLINDAGE_COMPLETE.md" class="card-link">🛡️ Blindagem Firestore</a>
+                    <a href="AGENT_INTEGRATION_GUIDE.md" class="card-link">🔗 Integração de Agentes</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">5</div>
+                <div class="card-icon">🧪</div>
+                <h3 class="card-title">Testes</h3>
+                <p class="card-description">Sistema completo de testes e validação</p>
+                <div class="card-links">
+                    <a href="TEST_EXECUTION_GUIDE.md" class="card-link">📖 Guia de Execução</a>
+                    <a href="testing-methodology/README.md" class="card-link">📚 Metodologia</a>
+                    <a href="TEST_RESULTS_PRODUCTION.md" class="card-link">📊 Resultados</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">6</div>
+                <div class="card-icon">📡</div>
+                <h3 class="card-title">API</h3>
+                <p class="card-description">Referência completa da API REST</p>
+                <div class="card-links">
+                    <a href="API_REFERENCE.md" class="card-link">📚 Referência Completa</a>
+                    <a href="BACKEND_STATUS.md" class="card-link">📊 Status do Backend</a>
+                    <a href="PRODUCTION_IMPROVEMENTS.md" class="card-link">🚀 Melhorias</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">7</div>
+                <div class="card-icon">📊</div>
+                <h3 class="card-title">Dashboard</h3>
+                <p class="card-description">Interface web e monitoramento</p>
+                <div class="card-links">
+                    <a href="MULTI_PROJECT_GUIDE.md" class="card-link">🌐 Multi-Projeto</a>
+                    <a href="REALTIME_DASHBOARD_GUIDE.md" class="card-link">⚡ Tempo Real</a>
+                    <a href="DASHBOARD_SPECIFICATION.md" class="card-link">📋 Especificação</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">8</div>
+                <div class="card-icon">🔧</div>
+                <h3 class="card-title">Autofix</h3>
+                <p class="card-description">Sistema de correção automática</p>
+                <div class="card-links">
+                    <a href="AUTOFIX_IMPLEMENTATION_PLAN.md" class="card-link">📋 Plano de Implementação</a>
+                    <a href="AUTOFIX_SUMMARY.md" class="card-link">📊 Resumo</a>
+                    <a href="ISSUE_TO_AUTOFIX_MAPPING.md" class="card-link">🗺️ Mapeamento</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">9</div>
+                <div class="card-icon">🐛</div>
+                <h3 class="card-title">Troubleshooting</h3>
+                <p class="card-description">Solução de problemas comuns</p>
+                <div class="card-links">
+                    <a href="TROUBLESHOOTING.md" class="card-link">🔧 Guia Completo</a>
+                    <a href="BUGS_FOUND.md" class="card-link">🐛 Bugs Encontrados</a>
+                    <a href="BUGFIXES_APPLIED.md" class="card-link">✅ Fixes Aplicados</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">10</div>
+                <div class="card-icon">📚</div>
+                <h3 class="card-title">Documentação</h3>
+                <p class="card-description">Índice e organização completa</p>
+                <div class="card-links">
+                    <a href="DOCUMENTATION_INDEX.md" class="card-link">📑 Índice Completo</a>
+                    <a href="EXECUTIVE_SUMMARY.md" class="card-link">📊 Resumo Executivo</a>
+                    <a href="DOCUMENTATION_CONSOLIDATION.md" class="card-link">🔄 Consolidação</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">11</div>
+                <div class="card-icon">⚙️</div>
+                <h3 class="card-title">Configuração</h3>
+                <p class="card-description">Setup e configuração do sistema</p>
+                <div class="card-links">
+                    <a href="PROJECT_CONFIGURATION.md" class="card-link">⚙️ Configuração</a>
+                    <a href="FIREBASE_CONFIG.md" class="card-link">🔥 Firebase Config</a>
+                    <a href="ENVIRONMENT.md" class="card-link">🌍 Variáveis</a>
+                </div>
+            </div>
+
+            <div class="playbook-card">
+                <div class="card-number">12</div>
+                <div class="card-icon">🔄</div>
+                <h3 class="card-title">Processos</h3>
+                <p class="card-description">Fluxos e processos do workflow</p>
+                <div class="card-links">
+                    <a href="processes/workflow-execution.md" class="card-link">🔄 Execução</a>
+                    <a href="processes/backlog-generation.md" class="card-link">📋 Backlog</a>
+                    <a href="processes/go-no-go-decision.md" class="card-link">✅ Decisão</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Maestro Workflow - Playbook Completo</p>
+        <p style="margin-top: 0.5rem; opacity: 0.7;">Última atualização: 31 de Dezembro de 2025</p>
+    </footer>
+</body>
+</html>
+

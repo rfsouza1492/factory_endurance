@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Backlog - leitura pública, escrita autenticada
+    match /backlog/{backlogId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Results - leitura autenticada, escrita apenas do sistema (via Cloud Functions)
+    match /results/{resultId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Apenas via Cloud Functions ou sistema interno
+    }
+    
+    // Decisions - leitura pública, escrita autenticada
+    match /decisions/{decisionId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Events - leitura autenticada, escrita apenas do sistema (via Cloud Functions)
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Apenas via Cloud Functions ou sistema interno
+    }
+    
+    // Evaluations - leitura autenticada, escrita autenticada
+    match /evaluations/{evaluationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Implementations - leitura autenticada, escrita autenticada
+    match /implementations/{implementationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Maestro results (multi-projeto) - leitura autenticada, escrita autenticada
+    match /maestro/{projectId}/results/{resultId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Coleção de teste - permitir tudo (apenas para desenvolvimento)
+    match /_test/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Em desenvolvimento (emuladores), permitir tudo para facilitar testes
+    // Em produção, as regras acima se aplicam
+    match /{document=**} {
+      // Permitir acesso se autenticado OU se estiver usando emuladores
+      allow read, write: if isAuthenticated() || 
+                          (request.auth == null && resource == null);
+    }
+  }
+}

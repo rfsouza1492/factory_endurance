@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro - Real-Time Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.idle { background: #64748b; }
+        .status-dot.running { background: #3b82f6; }
+        .status-dot.complete { background: #10b981; }
+        .status-dot.error { background: #ef4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .last-update {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+        }
+
+        .metric-label {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .phases-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .phase-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #334155;
+        }
+
+        .phase-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .phase-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .phase-status.pending { background: #475569; color: #cbd5e1; }
+        .phase-status.running { background: #1e40af; color: #dbeafe; }
+        .phase-status.complete { background: #065f46; color: #d1fae5; }
+        .phase-status.error { background: #991b1b; color: #fee2e2; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .agent-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .agent-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .agent-status.pending { background: #64748b; }
+        .agent-status.running { background: #3b82f6; animation: pulse 2s infinite; }
+        .agent-status.complete { background: #10b981; }
+        .agent-status.error { background: #ef4444; }
+
+        .agent-progress {
+            width: 100%;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .agent-progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.5s ease;
+        }
+
+        .timeline {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .timeline-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-time {
+            color: #94a3b8;
+            font-size: 12px;
+            min-width: 120px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .refresh-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #334155;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .refresh-toggle.active {
+            background: #3b82f6;
+        }
+
+        .refresh-toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .refresh-toggle.active .refresh-toggle-slider {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>🎭 Maestro - Real-Time Monitoring</h1>
+                <div class="status-indicator" style="margin-top: 8px;">
+                    <div class="status-dot" id="workflowStatusDot"></div>
+                    <span id="workflowStatus">Carregando...</span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                <div class="auto-refresh">
+                    <span>Auto-refresh:</span>
+                    <div class="refresh-toggle active" id="refreshToggle" onclick="toggleAutoRefresh()">
+                        <div class="refresh-toggle-slider"></div>
+                    </div>
+                    <select id="refreshIntervalSelect" onchange="changeRefreshInterval(parseInt(this.value))" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 4px; padding: 4px 8px; font-size: 12px; margin-left: 8px;">
+                        <option value="10">10s</option>
+                        <option value="30" selected>30s</option>
+                        <option value="60">60s</option>
+                        <option value="120">2min</option>
+                    </select>
+                </div>
+                <div class="last-update" id="lastUpdate">Última atualização: --</div>
+            </div>
+        </div>
+
+        <!-- Metrics Overview -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Agents Ativos</div>
+                <div class="metric-value" id="activeAgents">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Agents Completos</div>
+                <div class="metric-value" id="completedAgents">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Fase Atual</div>
+                <div class="metric-value" id="currentPhase">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tempo de Execução</div>
+                <div class="metric-value" id="executionTime">--</div>
+            </div>
+        </div>
+
+        <!-- Phases -->
+        <div class="phases-container" id="phasesContainer">
+            <!-- Phases will be dynamically inserted here -->
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline">
+            <div class="timeline-title">📊 Timeline de Atividades</div>
+            <div id="timelineContent">
+                <div class="timeline-item">
+                    <div class="timeline-time">--:--:--</div>
+                    <div class="timeline-content">Aguardando dados...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let autoRefreshInterval = null;
+        let autoRefreshEnabled = true;
+        let refreshIntervalSeconds = 30;
+
+        // Toggle auto-refresh
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            const toggle = document.getElementById('refreshToggle');
+            if (autoRefreshEnabled) {
+                toggle.classList.add('active');
+                startAutoRefresh();
+            } else {
+                toggle.classList.remove('active');
+                stopAutoRefresh();
+            }
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(fetchProgress, refreshIntervalSeconds * 1000);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // Fetch progress from API
+        async function fetchProgress() {
+            try {
+                const [progressResponse, metricsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/progress`),
+                    fetch(`${API_BASE}/api/metrics`)
+                ]);
+                
+                const progressData = await progressResponse.json();
+                const metricsData = await metricsResponse.json();
+                
+                if (progressData.success) {
+                    updateDashboard(progressData.progress);
+                }
+                if (metricsData.success) {
+                    updateMetrics(metricsData.metrics);
+                }
+                
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Erro ao buscar progresso:', error);
+            }
+        }
+
+        // Update metrics
+        function updateMetrics(metrics) {
+            document.getElementById('activeAgents').textContent = metrics.agents.active;
+            document.getElementById('completedAgents').textContent = metrics.agents.completed;
+            document.getElementById('currentPhase').textContent = getPhaseName(metrics.workflow.currentPhase);
+            document.getElementById('executionTime').textContent = formatDuration(metrics.workflow.executionTime);
+        }
+
+        // Update dashboard with data
+        function updateDashboard(data) {
+            // Update workflow status
+            const statusDot = document.getElementById('workflowStatusDot');
+            const statusText = document.getElementById('workflowStatus');
+            statusDot.className = `status-dot ${data.workflowStatus}`;
+            statusText.textContent = getStatusLabel(data.workflowStatus);
+
+            // Metrics are updated by updateMetrics() function
+
+            // Update phases
+            updatePhases(data.phases);
+
+            // Update timeline
+            updateTimeline(data);
+        }
+
+        function updatePhases(phases) {
+            const container = document.getElementById('phasesContainer');
+            container.innerHTML = '';
+
+            Object.entries(phases).forEach(([key, phase]) => {
+                const phaseCard = createPhaseCard(key, phase);
+                container.appendChild(phaseCard);
+            });
+        }
+
+        function createPhaseCard(key, phase) {
+            const card = document.createElement('div');
+            card.className = 'phase-card';
+
+            const agents = phase.agents || {};
+            const agentsList = Object.entries(agents);
+
+            card.innerHTML = `
+                <div class="phase-header">
+                    <div class="phase-title">${phase.name}</div>
+                    <div class="phase-status ${phase.status}">${phase.status}</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${phase.progress}%"></div>
+                </div>
+                <div style="margin-bottom: 12px; color: #94a3b8; font-size: 14px;">
+                    Progresso: ${phase.progress}%
+                </div>
+                ${agentsList.length > 0 ? `
+                    <div class="agents-grid">
+                        ${agentsList.map(([agentKey, agent]) => `
+                            <div class="agent-card">
+                                <div class="agent-header">
+                                    <div class="agent-name">${agent.name}</div>
+                                    <div class="agent-status ${agent.status}"></div>
+                                </div>
+                                <div class="agent-progress">
+                                    <div class="agent-progress-fill" style="width: ${agent.progress}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+
+            return card;
+        }
+
+        function updateTimeline(data) {
+            const timeline = document.getElementById('timelineContent');
+            const events = [];
+
+            // Add workflow status change
+            if (data.workflowStatus) {
+                events.push({
+                    time: data.timestamp,
+                    content: `Workflow: ${getStatusLabel(data.workflowStatus)}`,
+                    type: 'workflow'
+                });
+            }
+
+            // Add phase events
+            Object.entries(data.phases).forEach(([key, phase]) => {
+                if (phase.status !== 'pending') {
+                    events.push({
+                        time: data.timestamp,
+                        content: `${phase.name}: ${phase.status} (${phase.progress}%)`,
+                        type: 'phase'
+                    });
+                }
+            });
+
+            // Add agent events (only running or just completed)
+            Object.entries(data.phases.execution.agents || {}).forEach(([key, agent]) => {
+                if (agent.status === 'running') {
+                    events.push({
+                        time: data.timestamp,
+                        content: `🔄 ${agent.name}: Executando... (${agent.progress}%)`,
+                        type: 'agent'
+                    });
+                } else if (agent.status === 'complete') {
+                    events.push({
+                        time: data.timestamp,
+                        content: `✅ ${agent.name}: Completo`,
+                        type: 'agent'
+                    });
+                } else if (agent.status === 'error') {
+                    events.push({
+                        time: data.timestamp,
+                        content: `❌ ${agent.name}: Erro`,
+                        type: 'error'
+                    });
+                }
+            });
+
+            if (events.length === 0) {
+                timeline.innerHTML = `
+                    <div class="timeline-item">
+                        <div class="timeline-time">--:--:--</div>
+                        <div class="timeline-content">Nenhuma atividade recente</div>
+                    </div>
+                `;
+            } else {
+                // Sort by time (most recent first) and take last 15
+                const sortedEvents = events
+                    .sort((a, b) => new Date(b.time) - new Date(a.time))
+                    .slice(0, 15);
+                
+                timeline.innerHTML = sortedEvents.map(event => `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${formatTime(event.time)}</div>
+                        <div class="timeline-content">${event.content}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `Última atualização: ${formatTime(now.toISOString())}`;
+        }
+
+        // Add refresh interval selector
+        function changeRefreshInterval(seconds) {
+            refreshIntervalSeconds = seconds;
+            if (autoRefreshEnabled) {
+                startAutoRefresh();
+            }
+        }
+
+        // Helper functions
+        function getStatusLabel(status) {
+            const labels = {
+                idle: '🟡 Ocioso',
+                running: '🟢 Em Execução',
+                complete: '✅ Completo',
+                error: '❌ Erro'
+            };
+            return labels[status] || status;
+        }
+
+        function getPhaseName(phase) {
+            const names = {
+                0: 'Idle',
+                1: 'Execução',
+                2: 'Avaliação',
+                3: 'Decisão',
+                4: 'Completo'
+            };
+            return names[phase] || '--';
+        }
+
+        function formatDuration(seconds) {
+            if (seconds < 60) return `${seconds}s`;
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+        }
+
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // Initialize
+        fetchProgress();
+        startAutoRefresh();
+
+        // Manual refresh button (if needed)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' && e.ctrlKey) {
+                e.preventDefault();
+                fetchProgress();
+            }
+        });
+    </script>
+</body>
+</html>
+

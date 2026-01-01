@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro Dashboard - Sistema de Coordenação de Agentes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            /* Status Colors */
+            --status-running: #3b82f6;
+            --status-complete: #10b981;
+            --status-error: #ef4444;
+            --status-pending: #6b7280;
+            --status-paused: #f59e0b;
+            
+            /* Priority Colors */
+            --priority-p0: #ef4444;
+            --priority-p1: #f59e0b;
+            --priority-p2: #3b82f6;
+            --priority-p3: #6b7280;
+            
+            /* Score Colors */
+            --score-excellent: #10b981;
+            --score-good: #f59e0b;
+            --score-poor: #ef4444;
+            
+            /* Decision Colors */
+            --decision-go: #10b981;
+            --decision-go-concerns: #f59e0b;
+            --decision-no-go: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-running { background: #dbeafe; color: var(--status-running); }
+        .status-complete { background: #d1fae5; color: var(--status-complete); }
+        .status-error { background: #fee2e2; color: var(--status-error); }
+        .status-pending { background: #f3f4f6; color: var(--status-pending); }
+
+        .notification-badge {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--status-error);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Section 1: Status Geral */
+        .status-section {
+            margin-bottom: 2rem;
+        }
+
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+
+        .status-card h3 {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-card .subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .status-card.workflow { border-left-color: var(--status-running); }
+        .status-card.agents { border-left-color: var(--status-complete); }
+        .status-card.tasks { border-left-color: var(--priority-p2); }
+        .status-card.milestone { border-left-color: var(--score-excellent); }
+
+        /* Score Cards */
+        .score-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-card .label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-card .score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-card .score.excellent { color: var(--score-excellent); }
+        .score-card .score.good { color: var(--score-good); }
+        .score-card .score.poor { color: var(--score-poor); }
+
+        .score-card .indicator {
+            font-size: 1.5rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .timeline-icon.complete { background: #d1fae5; color: var(--status-complete); }
+        .timeline-icon.running { background: #dbeafe; color: var(--status-running); }
+        .timeline-icon.pending { background: #f3f4f6; color: var(--status-pending); }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-content p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Section 2: Agentes */
+        .agents-section {
+            margin-bottom: 2rem;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .agent-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            position: static;
+        }
+
+        .agent-card .header h3 {
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .agent-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .agent-status.complete { background: #d1fae5; color: var(--status-complete); }
+        .agent-status.running { background: #dbeafe; color: var(--status-running); }
+        .agent-status.pending { background: #f3f4f6; color: var(--status-pending); }
+        .agent-status.error { background: #fee2e2; color: var(--status-error); }
+
+        .agent-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .agent-metric {
+            text-align: center;
+        }
+
+        .agent-metric .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .agent-metric .label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Section 3: Backlog */
+        .backlog-section {
+            margin-bottom: 2rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .backlog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .backlog-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .backlog-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .backlog-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .backlog-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .backlog-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .backlog-column {
+            background: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 400px;
+        }
+
+        .backlog-column h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            cursor: move;
+        }
+
+        .task-card .priority {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-card .priority.p0 { background: #fee2e2; color: var(--priority-p0); }
+        .task-card .priority.p1 { background: #fef3c7; color: var(--priority-p1); }
+        .task-card .priority.p2 { background: #dbeafe; color: var(--priority-p2); }
+        .task-card .priority.p3 { background: #f3f4f6; color: var(--priority-p3); }
+
+        .task-card h4 {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-card .effort {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Section 4: Decisões */
+        .decisions-section {
+            margin-bottom: 2rem;
+        }
+
+        .decision-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .decision-card.go { border-left-color: var(--decision-go); }
+        .decision-card.go-concerns { border-left-color: var(--decision-go-concerns); }
+        .decision-card.no-go { border-left-color: var(--decision-no-go); }
+
+        .decision-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .decision-status {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+        }
+
+        .decision-status.go { background: #d1fae5; color: var(--decision-go); }
+        .decision-status.go-concerns { background: #fef3c7; color: var(--decision-go-concerns); }
+        .decision-status.no-go { background: #fee2e2; color: var(--decision-no-go); }
+
+        .decision-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .decision-metric {
+            text-align: center;
+        }
+
+        .decision-metric .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .decision-metric .label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-card h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar-container {
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .progress-bar-percentage {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--status-running);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar-fill.complete {
+            background: var(--status-complete);
+        }
+
+        .progress-bar-fill.error {
+            background: var(--status-error);
+        }
+
+        .progress-bar-fill.pending {
+            background: var(--status-pending);
+        }
+
+        .progress-bar-fill.running {
+            background: var(--status-running);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .agent-progress {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+            padding-left: 1rem;
+            border-left: 2px solid #e5e7eb;
+        }
+
+        .agent-progress-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .agent-progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .agent-progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+            font-size: 0.8125rem;
+        }
+
+        .agent-progress-name {
+            color: #6b7280;
+        }
+
+        .agent-progress-status {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .agent-progress-status.running {
+            background: #dbeafe;
+            color: var(--status-running);
+        }
+
+        .agent-progress-status.complete {
+            background: #d1fae5;
+            color: var(--status-complete);
+        }
+
+        .agent-progress-status.pending {
+            background: #f3f4f6;
+            color: var(--status-pending);
+        }
+
+        .agent-progress-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .agent-progress-bar-fill {
+            height: 100%;
+            background: var(--status-running);
+            transition: width 0.3s ease;
+        }
+
+        .agent-progress-bar-fill.complete {
+            background: var(--status-complete);
+        }
+
+        .agent-progress-bar-fill.running {
+            background: var(--status-running);
+            animation: pulse 2s infinite;
+        }
+
+        /* Section 5: Métricas */
+        .metrics-section {
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 1rem;
+        }
+
+        /* Section 6: Aprovações */
+        .approvals-section {
+            margin-bottom: 2rem;
+        }
+
+        .approval-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--status-running);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--status-complete);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--status-error);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Section 7: Logs */
+        .logs-section {
+            margin-bottom: 2rem;
+        }
+
+        .activity-timeline {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-message {
+            font-size: 0.875rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid var(--status-running);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .status-cards,
+            .score-cards,
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .backlog-board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🎭 Maestro Dashboard</h1>
+        <div class="header-actions">
+            <div class="status-badge status-running" id="workflowStatus">
+                <span>🔄</span>
+                <span>Running</span>
+            </div>
+            <div class="notification-badge" id="notifications" data-count="0" title="Notificações">
+                🔔
+            </div>
+            <button class="btn btn-primary" id="runWorkflowBtn">▶️ Executar Workflow</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Section 0: Progresso do Workflow -->
+        <section class="progress-section">
+            <div class="progress-card">
+                <h3>📊 Progresso do Workflow</h3>
+                <div id="workflowProgress"></div>
+            </div>
+        </section>
+
+        <!-- Section 1: Status Geral -->
+        <section class="status-section">
+            <h2 style="margin-bottom: 1rem;">📊 Status Geral do Workflow</h2>
+            
+            <div class="status-cards" id="statusCards">
+                <div class="status-card workflow">
+                    <h3>Workflow Status</h3>
+                    <div class="value">🔄 Running</div>
+                    <div class="subtitle">Fase 2/4</div>
+                </div>
+                <div class="status-card agents">
+                    <h3>Agentes Ativos</h3>
+                    <div class="value">6/6</div>
+                    <div class="subtitle">Todos executando</div>
+                </div>
+                <div class="status-card tasks">
+                    <h3>Tarefas Completas</h3>
+                    <div class="value">14/25</div>
+                    <div class="subtitle">56% Done</div>
+                </div>
+                <div class="status-card milestone">
+                    <h3>Milestone Progresso</h3>
+                    <div class="value">60%</div>
+                    <div class="subtitle">Milestone 1.0</div>
+                </div>
+            </div>
+
+            <div class="score-cards" id="scoreCards">
+                <!-- Scores serão preenchidos via JavaScript -->
+            </div>
+
+            <div class="timeline" id="workflowTimeline">
+                <h3 style="margin-bottom: 1rem;">⏱️ Timeline do Workflow</h3>
+                <!-- Timeline será preenchida via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 2: Agentes -->
+        <section class="agents-section">
+            <h2 style="margin-bottom: 1rem;">🤖 Status dos Agentes</h2>
+            <div class="agents-grid" id="agentsGrid">
+                <!-- Agentes serão preenchidos via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 3: Backlog -->
+        <section class="backlog-section">
+            <h2 style="margin-bottom: 1rem;">📋 Backlog & Tasks</h2>
+            <div class="backlog-board" id="backlogBoard">
+                <div class="backlog-column">
+                    <h3>📝 TODO</h3>
+                    <div id="todoTasks"></div>
+                </div>
+                <div class="backlog-column">
+                    <h3>🔄 IN PROGRESS</h3>
+                    <div id="inProgressTasks"></div>
+                </div>
+                <div class="backlog-column">
+                    <h3>👀 REVIEW</h3>
+                    <div id="reviewTasks"></div>
+                </div>
+                <div class="backlog-column">
+                    <h3>✅ DONE</h3>
+                    <div id="doneTasks"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Decisões -->
+        <section class="decisions-section">
+            <h2 style="margin-bottom: 1rem;">🎯 Decisões Go/No-go</h2>
+            <div id="decisionsContainer">
+                <!-- Decisões serão preenchidas via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 5: Métricas -->
+        <section class="metrics-section">
+            <h2 style="margin-bottom: 1rem;">📈 Métricas & Analytics</h2>
+            <div class="chart-container">
+                <h3>Tendência de Scores</h3>
+                <canvas id="scoresChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Distribuição de Issues</h3>
+                <canvas id="issuesChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Section 6: Aprovações -->
+        <section class="approvals-section">
+            <h2 style="margin-bottom: 1rem;">✅ Aprovações Pendentes</h2>
+            <div id="approvalsContainer">
+                <!-- Aprovações serão preenchidas via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 7: Logs -->
+        <section class="logs-section">
+            <h2 style="margin-bottom: 1rem;">📋 Atividades Recentes</h2>
+            <div class="activity-timeline" id="activityTimeline">
+                <!-- Atividades serão preenchidas via JavaScript -->
+            </div>
+        </section>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
+

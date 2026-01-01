@@ -1,0 +1,3081 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro - Sistema de Coordenação de Agentes</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color System */
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --primary-light: #818cf8;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --success-dark: #059669;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --error-dark: #dc2626;
+            --info: #3b82f6;
+            
+            /* Backgrounds */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-dark: #1f2937;
+            
+            /* Text */
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --text-inverse: #ffffff;
+            
+            /* Borders */
+            --border-color: #e5e7eb;
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-full: 9999px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-primary: 0 6px 12px rgba(102, 126, 234, 0.4);
+            
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+            
+            /* Transitions */
+            --transition-fast: 150ms ease-in-out;
+            --transition-base: 200ms ease-in-out;
+            --transition-slow: 300ms ease-in-out;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-md);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            font-weight: 400;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--bg-gradient);
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card h2 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-lg);
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        .card h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--bg-gradient);
+            border-radius: var(--border-radius-full);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.01em;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--bg-gradient);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-primary);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-success:hover {
+            background: var(--success-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-danger:hover {
+            background: var(--error-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.875rem;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 6px 12px;
+            border-radius: var(--border-radius-full);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 10px;
+            letter-spacing: 0.02em;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status.running {
+            background: #fbbf24;
+            color: #78350f;
+        }
+
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.pending {
+            background: #6b7280;
+            color: white;
+        }
+
+        .status.approved {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.rejected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.go {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.no-go {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.go-with-concerns {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .log {
+            background: var(--bg-dark);
+            color: #e5e7eb;
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.875rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: var(--spacing-md);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .log::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .log-line {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-line.info {
+            border-left-color: #3b82f6;
+        }
+
+        .log-line.success {
+            border-left-color: #10b981;
+        }
+
+        .log-line.error {
+            border-left-color: #ef4444;
+        }
+
+        .log-line.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .approval-item {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-base);
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .approval-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--bg-gradient);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform var(--transition-base);
+        }
+
+        .approval-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(4px);
+        }
+
+        .approval-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .approval-item.pending {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .approval-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .approval-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .approval-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .score.high {
+            color: #10b981;
+        }
+
+        .score.medium {
+            color: #f59e0b;
+        }
+
+        .score.low {
+            color: #ef4444;
+        }
+
+        .concerns-list {
+            margin-top: 15px;
+        }
+
+        .concern-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .concern-item.critical {
+            background: #fee2e2;
+            border-left-color: #ef4444;
+        }
+
+        .concern-item.high {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+
+        .concern-item.medium {
+            background: #e0e7ff;
+            border-left-color: #3b82f6;
+        }
+
+        .concern-priority {
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-top: var(--spacing-md);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loading States */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: var(--border-radius-sm);
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .loading-skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .skeleton-text {
+            height: 16px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-card {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Error Handling */
+        .error-container {
+            background: #fee2e2;
+            border: 2px solid var(--error);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error-container::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--error);
+        }
+
+        .error-title {
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-message {
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+
+        .error-details {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .error-retry {
+            margin-top: 15px;
+        }
+
+        /* Agents Grid */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .agent-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--bg-gradient);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform var(--transition-base);
+        }
+
+        .agent-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .agent-card:hover::after {
+            transform: scaleY(1);
+        }
+
+        .agent-card.pending {
+            border-color: #9ca3af;
+            background: #f3f4f6;
+        }
+
+        .agent-card.complete {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .agent-card.running {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .agent-card.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .agent-icon {
+            font-size: 1.5em;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+            flex: 1;
+        }
+
+        .agent-status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .agent-status-badge.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .agent-status-badge.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .agent-status-badge.running {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .agent-status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .agent-metrics {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .agent-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .agent-metric-label {
+            font-size: 0.75em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .agent-metric-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .agent-metric-value.score-high {
+            color: #10b981;
+        }
+
+        .agent-metric-value.score-medium {
+            color: #f59e0b;
+        }
+
+        .agent-metric-value.score-low {
+            color: #ef4444;
+        }
+
+        .agent-last-run {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Workflow Progress */
+        .workflow-progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-overview {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-status {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .progress-status.idle {
+            color: #6b7280;
+        }
+
+        .progress-status.running {
+            color: #3b82f6;
+        }
+
+        .progress-status.complete {
+            color: #10b981;
+        }
+
+        .progress-status.error {
+            color: #ef4444;
+        }
+
+        .progress-time {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .progress-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-full);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--bg-gradient);
+            border-radius: var(--border-radius-full);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-inverse);
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .progress-bar-fill.complete {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .progress-bar-fill.running {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .phases-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .phase-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--bg-gradient);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform var(--transition-base);
+        }
+
+        .phase-card.active {
+            border-color: var(--primary);
+            background: #eff6ff;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .phase-card.active::before {
+            transform: scaleY(1);
+        }
+
+        .phase-card.complete {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .phase-card.complete::before {
+            background: var(--success);
+            transform: scaleY(1);
+        }
+
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .phase-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .phase-status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .phase-status-badge.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .phase-status-badge.running {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .phase-status-badge.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .phase-status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .phase-progress {
+            margin-top: 10px;
+        }
+
+        .agents-list {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .agents-list-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .agents-list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .agent-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            background: #e5e7eb;
+            color: #666;
+        }
+
+        .agent-badge.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .agent-badge.running {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .agent-badge.pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* Background Jobs */
+        .jobs-container {
+            margin-top: 20px;
+        }
+
+        .job-item {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--bg-gradient);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform var(--transition-base);
+        }
+
+        .job-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(4px);
+        }
+
+        .job-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .job-item.running {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .job-item.completed {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .job-item.failed {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .job-item.queued {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .job-info {
+            flex: 1;
+        }
+
+        .job-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .job-type {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .job-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .job-status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .job-status-badge.running {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .job-status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .job-status-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .job-status-badge.queued {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .job-progress {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+        }
+
+        .metric-card {
+
+ Failed to load resource: the server responded with a status of 404 (Not Found)
+
+(index):2543 Erro ao carregar jobs: Error: HTTP 404: Not Found
+    at loadJobs ((index):2465:27)
+(index):1991 [Error Handler] Background Jobs: 
+Object            background: var(--bg-gradient);
+            color: var(--text-inverse);
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-base);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: var(--spacing-sm) 0;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0.95;
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .workflow-diagram {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            text-align: center;
+        }
+
+        .diagram-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .diagram-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .diagram-tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            transition: all var(--transition-base);
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .diagram-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--bg-gradient);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform var(--transition-base);
+        }
+
+        .diagram-tab:hover {
+            color: var(--primary);
+        }
+
+        .diagram-tab.active {
+            color: var(--primary);
+        }
+
+        .diagram-tab.active::after {
+            transform: scaleX(1);
+        }
+
+        .diagram-container {
+            display: none;
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        .legend {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+            padding: var(--spacing-lg);
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .legend-color.implemented {
+            background: #90EE90;
+            border-color: #006400;
+        }
+
+        .legend-color.proposed {
+            background: #87CEEB;
+            border-color: #4682B4;
+            border-style: dashed;
+        }
+
+        .legend-color.maestro {
+            background: #FFD700;
+            border-color: #FF8C00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Maestro - Sistema de Coordenação de Agentes</h1>
+            <p>Gerencie e execute workflows de análise de código, arquitetura e documentação</p>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Controles</h2>
+            <div class="button-group">
+                <button class="btn btn-primary" id="btnRunWorkflow" onclick="runWorkflow()">
+                    <span id="btnRunText">▶️ Executar Workflow Completo</span>
+                </button>
+                <button class="btn btn-secondary" onclick="refreshStatus()">🔄 Atualizar Status</button>
+                <button class="btn btn-secondary" onclick="viewLogs()">📋 Ver Logs</button>
+            </div>
+            <div id="workflowStatus" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Status Atual</h2>
+            <div id="errorContainer"></div>
+            <div class="grid" id="metricsGrid">
+                <!-- Métricas serão inseridas aqui -->
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Progresso do Workflow</h2>
+            <div id="errorProgressContainer"></div>
+            <div id="workflowProgressContainer">
+                <div class="skeleton skeleton-card">
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🤖 Status dos Agentes</h2>
+            <div id="errorAgentsContainer"></div>
+            <div id="agentsGrid" class="agents-grid">
+                <div class="skeleton skeleton-card">
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ Background Jobs</h2>
+            <div class="button-group" style="margin-bottom: 15px;">
+                <button class="btn btn-secondary" onclick="loadJobs()">🔄 Atualizar Jobs</button>
+                <button class="btn btn-secondary" onclick="toggleAutoRefresh()" id="autoRefreshBtn">⏸️ Auto-refresh: OFF</button>
+            </div>
+            <div id="errorJobsContainer"></div>
+            <div id="jobsContainer" class="jobs-container">
+                <div class="skeleton skeleton-card">
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔄 Workflow e Integração de Agentes</h2>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color implemented"></div>
+                    <span>🟢 Agentes Implementados</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color proposed"></div>
+                    <span>🔵 Agentes Propostos (Aguardando Implementação)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color maestro"></div>
+                    <span>⚪ Componentes do Maestro</span>
+                </div>
+            </div>
+
+            <div class="diagram-tabs">
+                <button class="diagram-tab active" onclick="showDiagram('main')">Fluxograma Principal</button>
+                <button class="diagram-tab" onclick="showDiagram('phase1')">Fase 1: Execução</button>
+                <button class="diagram-tab" onclick="showDiagram('phase2')">Fase 2: Avaliação</button>
+                <button class="diagram-tab" onclick="showDiagram('phase3')">Fase 3: Decisão</button>
+            </div>
+
+            <div id="diagram-main" class="diagram-container active">
+                <div class="workflow-diagram">
+                    <div class="mermaid" id="mermaid-main">
+graph TB
+    Start([🚀 Início do Workflow]) --> Maestro[🎭 Maestro - Coordenador Principal]
+    
+    Maestro --> Phase1[📋 FASE 1: Execução Paralela]
+    
+    Phase1 --> ArchAgent[🏗️ Architecture Review Agent<br/>🟢 IMPLEMENTADO]
+    Phase1 --> CodeAgent[✅ Code Quality Review Agent<br/>🟢 IMPLEMENTADO]
+    Phase1 --> DocAgent[📚 Document Analysis Agent<br/>🟢 IMPLEMENTADO]
+    
+    Phase1 -.-> SecAgent[🔒 Security Audit Agent<br/>🔵 PROPOSTO]
+    Phase1 -.-> PerfAgent[⚡ Performance Analysis Agent<br/>🔵 PROPOSTO]
+    Phase1 -.-> DepAgent[📦 Dependency Management Agent<br/>🔵 PROPOSTO]
+    Phase1 -.-> TestAgent[🧪 Testing Coverage Agent<br/>🔵 PROPOSTO]
+    Phase1 -.-> AccAgent[♿ Accessibility Audit Agent<br/>🔵 PROPOSTO]
+    Phase1 -.-> APIAgent[🔌 API Design Review Agent<br/>🔵 PROPOSTO]
+    
+    ArchAgent --> Results1[📁 shared/results/]
+    CodeAgent --> Results1
+    DocAgent --> Results1
+    SecAgent -.-> Results1
+    PerfAgent -.-> Results1
+    DepAgent -.-> Results1
+    TestAgent -.-> Results1
+    AccAgent -.-> Results1
+    APIAgent -.-> Results1
+    
+    Results1 --> Phase2[🔄 FASE 2: Avaliação Cruzada]
+    
+    Phase2 --> Eval1[Architecture avalia outros]
+    Phase2 --> Eval2[Code Quality avalia outros]
+    Phase2 --> Eval3[Document Analysis avalia outros]
+    Phase2 -.-> Eval4[Security avalia outros<br/>🔵 PROPOSTO]
+    Phase2 -.-> Eval5[Performance avalia outros<br/>🔵 PROPOSTO]
+    
+    Eval1 --> Evals[📁 shared/evaluations/]
+    Eval2 --> Evals
+    Eval3 --> Evals
+    Eval4 -.-> Evals
+    Eval5 -.-> Evals
+    
+    Evals --> Phase3[🎯 FASE 3: Decisão Go/No-go]
+    
+    Phase3 --> Consolidate[Consolidar Preocupações]
+    Phase3 --> Conflicts[Identificar Conflitos]
+    Phase3 --> Prioritize[Priorizar Issues]
+    Phase3 --> Calculate[Calcular Scores]
+    
+    Consolidate --> Decision{Decisão}
+    Conflicts --> Decision
+    Prioritize --> Decision
+    Calculate --> Decision
+    
+    Decision -->|Nenhum Issue Crítico| GO[✅ GO]
+    Decision -->|Issues Críticos| NOGO[❌ NO-GO]
+    Decision -->|Issues Alta Prioridade| GOC[⚠️ GO WITH CONCERNS]
+    
+    GO --> Phase4[👤 FASE 4: Aprovação]
+    NOGO --> Phase4
+    GOC --> Phase4
+    
+    Phase4 --> Report[📄 Gerar Relatório]
+    Report --> ActionPlan{Plano de Ação?}
+    
+    ActionPlan -->|NO-GO| Plan[📋 Gerar Plano de Ação]
+    ActionPlan -->|GO/GOC| NoPlan[Sem Plano]
+    
+    Plan --> Approval{Usuário Aprova?}
+    NoPlan --> Approval
+    
+    Approval -->|Sim| Approved[✅ Aprovado]
+    Approval -->|Não| Rejected[❌ Rejeitado]
+    
+    Approved --> TrackAgent[🔄 Implementation Tracking<br/>🔵 PROPOSTO]
+    Rejected --> Review[🔍 Revisar e Corrigir]
+    
+    TrackAgent -.-> TrackReport[📁 Verificar Implementação]
+    TrackReport -.-> Update[Atualizar Status]
+    
+    Review --> Phase1
+    Approved --> End([🏁 Fim])
+    Update -.-> End
+    
+    style ArchAgent fill:#90EE90,stroke:#006400,stroke-width:2px
+    style CodeAgent fill:#90EE90,stroke:#006400,stroke-width:2px
+    style DocAgent fill:#90EE90,stroke:#006400,stroke-width:2px
+    style SecAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style PerfAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style DepAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style TestAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style AccAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style APIAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style TrackAgent fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style Maestro fill:#FFD700,stroke:#FF8C00,stroke-width:3px
+                    </div>
+                </div>
+            </div>
+
+            <div id="diagram-phase1" class="diagram-container">
+                <div class="workflow-diagram">
+                    <div class="mermaid" id="mermaid-phase1">
+graph LR
+    subgraph Implementados["Agentes Implementados"]
+        A1["Architecture Review"]
+        A2["Code Quality Review"]
+        A3["Document Analysis"]
+    end
+    
+    subgraph Propostos["Agentes Propostos"]
+        B1["Security Audit"]
+        B2["Performance Analysis"]
+        B3["Dependency Management"]
+        B4["Testing Coverage"]
+        B5["Accessibility Audit"]
+        B6["API Design Review"]
+    end
+    
+    subgraph Resultados["Resultados"]
+        R1["shared/results/"]
+    end
+    
+    A1 --> R1
+    A2 --> R1
+    A3 --> R1
+    B1 -.-> R1
+    B2 -.-> R1
+    B3 -.-> R1
+    B4 -.-> R1
+    B5 -.-> R1
+    B6 -.-> R1
+    
+    style A1 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style A2 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style A3 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style B1 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style B2 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style B3 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style B4 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style B5 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style B6 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+                    </div>
+                </div>
+            </div>
+
+            <div id="diagram-phase2" class="diagram-container">
+                <div class="workflow-diagram">
+                    <div class="mermaid" id="mermaid-phase2">
+graph TB
+    subgraph ResultadosFase1["Resultados da Fase 1"]
+        R1["Architecture Results"]
+        R2["Code Quality Results"]
+        R3["Document Analysis Results"]
+        R4["Security Results"]
+        R5["Performance Results"]
+    end
+    
+    subgraph AvaliacoesImpl["Avaliações Cruzadas - Implementadas"]
+        E1["Architecture avalia Code Quality"]
+        E2["Architecture avalia Document Analysis"]
+        E3["Code Quality avalia Architecture"]
+        E4["Code Quality avalia Document Analysis"]
+        E5["Document Analysis avalia Architecture"]
+        E6["Document Analysis avalia Code Quality"]
+    end
+    
+    subgraph AvaliacoesProp["Avaliações Cruzadas - Propostas"]
+        E7["Security avalia Architecture"]
+        E8["Security avalia Code Quality"]
+        E9["Performance avalia Architecture"]
+        E10["Performance avalia Code Quality"]
+    end
+    
+    R1 --> E1
+    R2 --> E1
+    R1 --> E2
+    R3 --> E2
+    R2 --> E3
+    R1 --> E3
+    R2 --> E4
+    R3 --> E4
+    R3 --> E5
+    R1 --> E5
+    R3 --> E6
+    R2 --> E6
+    
+    R4 -.-> E7
+    R1 -.-> E7
+    R4 -.-> E8
+    R2 -.-> E8
+    R5 -.-> E9
+    R1 -.-> E9
+    R5 -.-> E10
+    R2 -.-> E10
+    
+    E1 --> Evals["shared/evaluations/"]
+    E2 --> Evals
+    E3 --> Evals
+    E4 --> Evals
+    E5 --> Evals
+    E6 --> Evals
+    E7 -.-> Evals
+    E8 -.-> Evals
+    E9 -.-> Evals
+    E10 -.-> Evals
+    
+    style E1 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E2 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E3 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E4 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E5 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E6 fill:#90EE90,stroke:#006400,stroke-width:2px
+    style E7 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style E8 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style E9 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style E10 fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+                    </div>
+                </div>
+            </div>
+
+            <div id="diagram-phase3" class="diagram-container">
+                <div class="workflow-diagram">
+                    <div class="mermaid" id="mermaid-phase3">
+graph TB
+    subgraph Inputs["Inputs"]
+        Results["Resultados dos Agentes"]
+        Evals["Avaliações Cruzadas"]
+    end
+    
+    subgraph Processamento["Processamento"]
+        Consolidate["Consolidar Preocupações"]
+        Conflicts["Identificar Conflitos"]
+        Prioritize["Priorizar Issues"]
+        Calculate["Calcular Scores"]
+    end
+    
+    subgraph Decisao["Decisão"]
+        Decision{"Analisar Critérios"}
+        GO["GO - Nenhum Issue Crítico"]
+        NOGO["NO-GO - Issues Críticos"]
+        GOC["GO WITH CONCERNS - Issues Alta Prioridade"]
+    end
+    
+    subgraph PlanoAcao["Plano de Ação"]
+        Plan["Gerar Plano de Ação - PROPOSTO"]
+        Track["Implementation Tracking - PROPOSTO"]
+    end
+    
+    Results --> Consolidate
+    Evals --> Consolidate
+    Results --> Conflicts
+    Evals --> Conflicts
+    Results --> Prioritize
+    Results --> Calculate
+    
+    Consolidate --> Decision
+    Conflicts --> Decision
+    Prioritize --> Decision
+    Calculate --> Decision
+    
+    Decision -->|"Score >= 75, 0 Issues P0"| GO
+    Decision -->|"Issues P0 > 0"| NOGO
+    Decision -->|"Issues P1 > 0, 0 Issues P0"| GOC
+    
+    NOGO --> Plan
+    Plan -.-> Track
+    
+    style Plan fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style Track fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    style GO fill:#90EE90,stroke:#006400,stroke-width:2px
+    style NOGO fill:#FF6B6B,stroke:#CC0000,stroke-width:2px
+    style GOC fill:#FFD93D,stroke:#FFA500,stroke-width:2px
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✅ Aprovações Pendentes</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">
+                <strong>Nota:</strong> Todas as decisões (GO, NO-GO, GO WITH CONCERNS) precisam de aprovação antes de prosseguir.
+                Decisões NO-GO incluem um plano de ação detalhado para transformá-las em GO.
+            </p>
+            <div id="approvalsList">
+                <div class="empty-state">
+                    <p>Nenhuma aprovação pendente</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📜 Backlog de Aprovações</h2>
+            <div id="backlogList">
+                <div class="empty-state">
+                    <p>Nenhum item no backlog</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="logsCard" style="display: none;">
+            <h2>📋 Logs do Workflow</h2>
+            <div class="log" id="logsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+
+        // Carregar status inicial
+        window.addEventListener('DOMContentLoaded', () => {
+            // Inicializar Mermaid
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({ 
+                    startOnLoad: false,
+                    theme: 'default',
+                    themeVariables: {
+                        primaryColor: '#667eea',
+                        primaryTextColor: '#333',
+                        primaryBorderColor: '#764ba2',
+                        lineColor: '#667eea',
+                        secondaryColor: '#f0f0f0',
+                        tertiaryColor: '#ffffff'
+                    }
+                });
+                
+                // Renderizar diagramas após inicialização
+                setTimeout(() => {
+                    renderMermaidDiagrams();
+                }, 500);
+            }
+            
+            refreshStatus();
+            loadApprovals();
+            loadBacklog();
+            loadJobs();
+            loadAgents();
+            loadProgress();
+            
+            // Atualizar a cada 5 segundos
+            setInterval(() => {
+                refreshStatus();
+                loadApprovals();
+                loadAgents();
+                loadProgress();
+            }, 5000);
+        });
+
+        function showDiagram(diagramId) {
+            // Esconder todos os diagramas
+            document.querySelectorAll('.diagram-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Remover active de todas as tabs
+            document.querySelectorAll('.diagram-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar diagrama selecionado
+            const targetContainer = document.getElementById(`diagram-${diagramId}`);
+            if (targetContainer) {
+                targetContainer.classList.add('active');
+            }
+            
+            // Ativar a tab clicada
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Re-renderizar o diagrama após mostrar
+            setTimeout(() => {
+                if (typeof mermaid !== 'undefined') {
+                    const diagram = targetContainer?.querySelector('.mermaid');
+                    if (diagram && !diagram.hasAttribute('data-processed')) {
+                        mermaid.run({
+                            nodes: [diagram],
+                            suppressErrors: true
+                        });
+                    }
+                }
+            }, 200);
+        }
+
+        function renderMermaidDiagrams() {
+            // Renderizar diagramas Mermaid que ainda não foram processados
+            if (typeof mermaid !== 'undefined') {
+                const diagrams = document.querySelectorAll('.mermaid:not([data-processed])');
+                if (diagrams.length > 0) {
+                    mermaid.run({
+                        nodes: diagrams,
+                        suppressErrors: true
+                    });
+                }
+            }
+        }
+
+        async function runWorkflow() {
+            const btn = document.getElementById('btnRunWorkflow');
+            const btnText = document.getElementById('btnRunText');
+            const statusDiv = document.getElementById('workflowStatus');
+
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span> Executando...';
+            statusDiv.innerHTML = '<span class="status running">🔄 Executando workflow...</span>';
+
+            try {
+                const response = await fetch(`${API_BASE}/workflow/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success) {
+                    statusDiv.innerHTML = '<span class="status success">✅ Workflow iniciado em background!</span>';
+                    if (data.jobId) {
+                        statusDiv.innerHTML += `<br><small style="color: #666;">Job ID: ${data.jobId}</small>`;
+                    }
+                    setTimeout(() => {
+                        refreshStatus();
+                        loadApprovals();
+                        loadJobs(); // Carregar jobs após iniciar workflow
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao executar workflow:', error);
+                statusDiv.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-title">❌ Erro ao executar workflow</div>
+                        <div class="error-message">${error.message}</div>
+                        <div class="error-retry">
+                            <button class="btn btn-secondary" onclick="runWorkflow()">🔄 Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = '▶️ Executar Workflow Completo';
+            }
+        }
+
+        // Error Handling System - Robusto e Completo
+        function showError(containerId, error, context = '') {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                console.error(`Container não encontrado: ${containerId}`);
+                return;
+            }
+
+            // Classificar tipo de erro
+            const errorType = classifyErrorType(error);
+            const errorMessage = getErrorMessage(error);
+            const httpStatus = getHttpStatus(error);
+            const isRetryable = isErrorRetryable(error);
+
+            const errorHtml = `
+                <div class="error-container">
+                    <div class="error-title">
+                        <span>❌ Erro ${context ? `em ${context}` : ''}</span>
+                        ${errorType ? `<span class="badge" style="margin-left: 10px; background: ${getErrorTypeColor(errorType)}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">${errorType}</span>` : ''}
+                    </div>
+                    <div class="error-message">
+                        ${errorMessage}
+                    </div>
+                    ${httpStatus ? `
+                        <div style="margin-top: 10px; padding: 8px; background: #fee2e2; border-radius: 4px; font-size: 0.9em;">
+                            <strong>Status HTTP:</strong> ${httpStatus.code} ${httpStatus.text}
+                            ${httpStatus.suggestion ? `<br><strong>Sugestão:</strong> ${httpStatus.suggestion}` : ''}
+                        </div>
+                    ` : ''}
+                    ${error.stack ? `
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; color: #dc2626; font-weight: 600; padding: 8px; background: #fee2e2; border-radius: 4px;">
+                                🔍 Detalhes Técnicos
+                            </summary>
+                            <div class="error-details">${escapeHtml(error.stack)}</div>
+                        </details>
+                    ` : ''}
+                    ${error.response ? `
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #dc2626; font-weight: 600; padding: 8px; background: #fee2e2; border-radius: 4px;">
+                                📄 Resposta do Servidor
+                            </summary>
+                            <div class="error-details">${escapeHtml(JSON.stringify(error.response, null, 2))}</div>
+                        </details>
+                    ` : ''}
+                    <div class="error-retry">
+                        ${isRetryable ? `
+                            <button class="btn btn-secondary" onclick="retryLastAction('${containerId}')">
+                                🔄 Tentar Novamente
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="clearError('${containerId}')" style="margin-left: 10px;">
+                            ✖️ Fechar
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = errorHtml;
+            
+            // Log detalhado no console
+            console.error(`[Error Handler] ${context || 'Unknown'}:`, {
+                message: error.message,
+                type: errorType,
+                httpStatus: httpStatus,
+                stack: error.stack,
+                error: error
+            });
+        }
+
+        // Classificar tipo de erro
+        function classifyErrorType(error) {
+            if (error.name === 'TypeError') return 'Tipo de Dados';
+            if (error.name === 'SyntaxError') return 'Sintaxe';
+            if (error.name === 'ReferenceError') return 'Referência';
+            if (error.message?.includes('network') || error.message?.includes('fetch')) return 'Rede';
+            if (error.message?.includes('HTTP 4')) return 'Cliente (4xx)';
+            if (error.message?.includes('HTTP 5')) return 'Servidor (5xx)';
+            if (error.message?.includes('JSON')) return 'JSON';
+            if (error.message?.includes('timeout')) return 'Timeout';
+            return 'Desconhecido';
+        }
+
+        // Obter mensagem de erro amigável
+        function getErrorMessage(error) {
+            // Mensagens amigáveis para erros comuns
+            if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {
+                return 'Erro de conexão. Verifique sua internet e tente novamente.';
+            }
+            if (error.message?.includes('HTTP 404')) {
+                return 'Recurso não encontrado. O servidor pode estar indisponível.';
+            }
+            if (error.message?.includes('HTTP 500')) {
+                return 'Erro interno do servidor. Tente novamente em alguns instantes.';
+            }
+            if (error.message?.includes('HTTP 503')) {
+                return 'Serviço temporariamente indisponível. Tente novamente mais tarde.';
+            }
+            if (error.message?.includes('JSON')) {
+                return 'Erro ao processar resposta do servidor. Dados inválidos.';
+            }
+            if (error.message?.includes('timeout')) {
+                return 'Tempo de espera esgotado. A operação demorou muito para responder.';
+            }
+            
+            // Retornar mensagem original se não houver tradução
+            return error.message || 'Erro desconhecido ocorreu';
+        }
+
+        // Obter status HTTP se disponível
+        function getHttpStatus(error) {
+            if (error.message?.match(/HTTP (\d{3})/)) {
+                const code = parseInt(error.message.match(/HTTP (\d{3})/)[1]);
+                const statusText = error.message.match(/HTTP \d{3}: (.+)/)?.[1] || '';
+                
+                const suggestions = {
+                    400: 'Verifique os dados enviados',
+                    401: 'Você precisa estar autenticado',
+                    403: 'Você não tem permissão para esta ação',
+                    404: 'O recurso solicitado não foi encontrado',
+                    429: 'Muitas requisições. Aguarde um momento',
+                    500: 'Erro no servidor. Tente novamente mais tarde',
+                    502: 'Servidor temporariamente indisponível',
+                    503: 'Serviço em manutenção. Tente mais tarde'
+                };
+
+                return {
+                    code,
+                    text: statusText,
+                    suggestion: suggestions[code] || null
+                };
+            }
+            return null;
+        }
+
+        // Verificar se erro é retryable
+        function isErrorRetryable(error) {
+            // Erros de rede são retryable
+            if (error.message?.includes('network') || error.message?.includes('fetch')) return true;
+            // Timeouts são retryable
+            if (error.message?.includes('timeout')) return true;
+            // 5xx são retryable
+            if (error.message?.includes('HTTP 5')) return true;
+            // 429 (rate limit) é retryable
+            if (error.message?.includes('HTTP 429')) return true;
+            // 503 é retryable
+            if (error.message?.includes('HTTP 503')) return true;
+            // 4xx geralmente não são retryable (exceto 429)
+            if (error.message?.includes('HTTP 4')) return false;
+            // Erros de sintaxe/JSON não são retryable
+            if (error.message?.includes('JSON') || error.name === 'SyntaxError') return false;
+            
+            return true; // Por padrão, permitir retry
+        }
+
+        // Obter cor do tipo de erro
+        function getErrorTypeColor(type) {
+            const colors = {
+                'Rede': '#ef4444',
+                'Timeout': '#f59e0b',
+                'Cliente (4xx)': '#f59e0b',
+                'Servidor (5xx)': '#ef4444',
+                'JSON': '#8b5cf6',
+                'Tipo de Dados': '#8b5cf6',
+                'Sintaxe': '#8b5cf6',
+                'Referência': '#8b5cf6',
+                'Desconhecido': '#6b7280'
+            };
+            return colors[type] || '#6b7280';
+        }
+
+        // Escapar HTML para segurança
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearError(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
+        let lastAction = null;
+        function setLastAction(action) {
+            lastAction = action;
+        }
+
+        function retryLastAction(containerId) {
+            clearError(containerId);
+            if (lastAction) {
+                lastAction();
+            }
+        }
+
+        // Loading States
+        function showLoading(containerId, message = 'Carregando...') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="margin: 0 auto 15px;"></div>
+                    <p style="color: #666;">${message}</p>
+                </div>
+            `;
+        }
+
+        function showSkeleton(containerId, count = 3) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = Array(count).fill(0).map(() => `
+                <div class="skeleton skeleton-card">
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                </div>
+            `).join('');
+        }
+
+        // Load Agents Status
+        async function loadAgents() {
+            const agentsGrid = document.getElementById('agentsGrid');
+            const errorContainer = document.getElementById('errorAgentsContainer');
+            
+            clearError('errorAgentsContainer');
+            showSkeleton('agentsGrid', 6);
+            setLastAction(() => loadAgents());
+
+            try {
+                const response = await fetch(`${API_BASE}/agents`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success && data.agents && data.agents.length > 0) {
+                    agentsGrid.innerHTML = data.agents.map(agent => {
+                        const statusClass = agent.status || 'pending';
+                        const scoreClass = agent.score >= 75 ? 'score-high' : agent.score >= 50 ? 'score-medium' : 'score-low';
+                        
+                        return `
+                            <div class="agent-card ${statusClass}">
+                                <div class="agent-header">
+                                    <span class="agent-icon">${agent.icon || '🤖'}</span>
+                                    <span class="agent-name">${agent.name}</span>
+                                    <span class="agent-status-badge ${statusClass}">${statusClass}</span>
+                                </div>
+                                <div class="agent-metrics">
+                                    <div class="agent-metric">
+                                        <span class="agent-metric-label">Score</span>
+                                        <span class="agent-metric-value ${scoreClass}">${agent.score || 0}</span>
+                                    </div>
+                                    <div class="agent-metric">
+                                        <span class="agent-metric-label">Issues</span>
+                                        <span class="agent-metric-value">${agent.issues || 0}</span>
+                                    </div>
+                                </div>
+                                ${agent.lastRun ? `
+                                    <div class="agent-last-run">
+                                        Última execução: ${agent.lastRun.replace('.md', '')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    agentsGrid.innerHTML = '<div class="empty-state"><p>Nenhum agente encontrado</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar agentes:', error);
+                showError('errorAgentsContainer', error, 'Agentes');
+                agentsGrid.innerHTML = '<div class="empty-state"><p>Erro ao carregar agentes</p></div>';
+            }
+        }
+
+        // Load Workflow Progress
+        async function loadProgress() {
+            const progressContainer = document.getElementById('workflowProgressContainer');
+            const errorContainer = document.getElementById('errorProgressContainer');
+            
+            clearError('errorProgressContainer');
+            showSkeleton('workflowProgressContainer', 1);
+            setLastAction(() => loadProgress());
+
+            try {
+                const response = await fetch(`${API_BASE}/progress`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success && data.progress) {
+                    const progress = data.progress;
+                    const overallProgress = calculateOverallProgress(progress);
+                    const elapsedTime = calculateElapsedTime(progress.startTime, progress.endTime);
+                    
+                    progressContainer.innerHTML = `
+                        <div class="workflow-progress-container">
+                            <div class="progress-overview">
+                                <div class="progress-header">
+                                    <div>
+                                        <div class="progress-status ${progress.workflowStatus}">
+                                            ${getStatusLabel(progress.workflowStatus)}
+                                        </div>
+                                        <div class="progress-time">
+                                            ${elapsedTime}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 1.5em; font-weight: 700; color: #667eea;">
+                                            ${overallProgress}%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-label">
+                                        <span>Progresso Geral</span>
+                                        <span>${overallProgress}%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill ${progress.workflowStatus}" style="width: ${overallProgress}%">
+                                            ${overallProgress}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="phases-container">
+                                ${renderPhase(progress.phases.execution, 'execution', progress.currentPhase)}
+                                ${renderPhase(progress.phases.evaluation, 'evaluation', progress.currentPhase)}
+                                ${renderPhase(progress.phases.decision, 'decision', progress.currentPhase)}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    progressContainer.innerHTML = '<div class="empty-state"><p>Nenhum progresso disponível</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar progresso:', error);
+                showError('errorProgressContainer', error, 'Progresso');
+                progressContainer.innerHTML = '<div class="empty-state"><p>Erro ao carregar progresso</p></div>';
+            }
+        }
+
+        function calculateOverallProgress(progress) {
+            if (!progress.phases) return 0;
+            
+            const phases = ['execution', 'evaluation', 'decision'];
+            const totalProgress = phases.reduce((sum, phaseKey) => {
+                const phase = progress.phases[phaseKey];
+                return sum + (phase?.progress || 0);
+            }, 0);
+            
+            return Math.round(totalProgress / phases.length);
+        }
+
+        function calculateElapsedTime(startTime, endTime) {
+            if (!startTime) return 'Não iniciado';
+            
+            const start = new Date(startTime);
+            const end = endTime ? new Date(endTime) : new Date();
+            const diff = Math.floor((end - start) / 1000);
+            
+            if (diff < 60) return `${diff} segundos`;
+            if (diff < 3600) return `${Math.floor(diff / 60)} minutos`;
+            return `${Math.floor(diff / 3600)} horas`;
+        }
+
+        function renderPhase(phase, phaseKey, currentPhase) {
+            if (!phase) return '';
+            
+            const phaseNumber = phaseKey === 'execution' ? 1 : phaseKey === 'evaluation' ? 2 : 3;
+            const isActive = currentPhase === phaseNumber;
+            const statusClass = phase.status || 'pending';
+            
+            let agentsHtml = '';
+            if (phase.agents && Object.keys(phase.agents).length > 0) {
+                const agentsList = Object.values(phase.agents).map(agent => {
+                    const agentStatusClass = agent.status || 'pending';
+                    return `<span class="agent-badge ${agentStatusClass}">${agent.name}</span>`;
+                }).join('');
+                agentsHtml = `
+                    <div class="agents-list">
+                        <div class="agents-list-title">Agentes:</div>
+                        <div class="agents-list-items">${agentsList}</div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="phase-card ${isActive ? 'active' : ''} ${statusClass === 'complete' ? 'complete' : ''}">
+                    <div class="phase-header">
+                        <div class="phase-name">Fase ${phaseNumber}: ${phase.name || phaseKey}</div>
+                        <span class="phase-status-badge ${statusClass}">${statusClass}</span>
+                    </div>
+                    <div class="phase-progress">
+                        <div class="progress-bar-label">
+                            <span>Progresso</span>
+                            <span>${phase.progress || 0}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill ${statusClass}" style="width: ${phase.progress || 0}%">
+                                ${phase.progress || 0}%
+                            </div>
+                        </div>
+                    </div>
+                    ${agentsHtml}
+                </div>
+            `;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'idle': '⏸️ Aguardando',
+                'running': '🔄 Em Execução',
+                'complete': '✅ Completo',
+                'error': '❌ Erro',
+                'pending': '⏳ Pendente'
+            };
+            return labels[status] || status;
+        }
+
+        async function refreshStatus() {
+            const metricsGrid = document.getElementById('metricsGrid');
+            const errorContainer = document.getElementById('errorContainer');
+            
+            clearError('errorContainer');
+            showSkeleton('metricsGrid', 4);
+            setLastAction(() => refreshStatus());
+
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Score Geral</div>
+                        <div class="metric-value">${data.scores?.overall || 0}/100</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Architecture</div>
+                        <div class="metric-value">${data.scores?.architecture || 0}/100</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Code Quality</div>
+                        <div class="metric-value">${data.scores?.codeQuality || 0}/100</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Documentation</div>
+                        <div class="metric-value">${data.scores?.documentation || 0}/100</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                showError('errorContainer', error, 'Status');
+                metricsGrid.innerHTML = '<div class="empty-state"><p>Erro ao carregar métricas</p></div>';
+            }
+        }
+
+        // Background Jobs Management
+        let autoRefreshInterval = null;
+        let autoRefreshEnabled = false;
+
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            const btn = document.getElementById('autoRefreshBtn');
+            
+            if (autoRefreshEnabled) {
+                btn.textContent = '⏸️ Auto-refresh: ON';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-secondary');
+                autoRefreshInterval = setInterval(loadJobs, 5000); // Atualizar a cada 5 segundos
+            } else {
+                btn.textContent = '⏸️ Auto-refresh: OFF';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+
+        async function loadJobs() {
+            const jobsContainer = document.getElementById('jobsContainer');
+            const errorJobsContainer = document.getElementById('errorJobsContainer');
+            
+            clearError('errorJobsContainer');
+            showSkeleton('jobsContainer', 2);
+            setLastAction(() => loadJobs());
+
+            try {
+                const response = await fetch(`${API_BASE}/jobs?limit=20`);
+                
+                // Se 404 ou 503, módulo não está disponível - não é um erro crítico
+                if (response.status === 404 || response.status === 503) {
+                    jobsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <p>⚠️ Background Jobs não está disponível</p>
+                            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 8px;">
+                                O módulo de background jobs não está carregado. Jobs serão executados de forma síncrona.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (!data.success) {
+                    // Se o erro é que o módulo não está disponível, mostrar mensagem amigável
+                    if (data.error && data.error.includes('não disponível')) {
+                        jobsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <p>⚠️ Background Jobs não está disponível</p>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 8px;">
+                                    ${data.error}
+                                </p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    throw new Error(data.error || 'Erro ao carregar jobs');
+                }
+
+                const jobs = data.jobs || [];
+
+                if (jobs.length === 0) {
+                    jobsContainer.innerHTML = '<div class="empty-state"><p>Nenhum job em execução</p></div>';
+                    return;
+                }
+
+                jobsContainer.innerHTML = jobs.map(job => {
+                    const statusClass = job.status || 'unknown';
+                    const startedAt = new Date(job.startedAt);
+                    const duration = job.completedAt 
+                        ? Math.round((new Date(job.completedAt) - startedAt) / 1000)
+                        : Math.round((Date.now() - startedAt) / 1000);
+                    
+                    return `
+                        <div class="job-item ${statusClass}">
+                            <div class="job-header">
+                                <div class="job-info">
+                                    <div class="job-id">ID: ${job.id}</div>
+                                    <div class="job-type">${getJobTypeLabel(job.type)}</div>
+                                    <div class="job-meta">
+                                        <span>📅 ${startedAt.toLocaleString('pt-BR')}</span>
+                                        <span>⏱️ ${formatDuration(duration)}</span>
+                                        ${job.exitCode !== null ? `<span>Exit: ${job.exitCode}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="job-actions">
+                                    <span class="job-status-badge ${statusClass}">${getStatusLabel(job.status)}</span>
+                                    ${job.status === 'running' || job.status === 'queued' ? `
+                                        <button class="btn btn-danger" onclick="cancelJob('${job.id}')" style="padding: 6px 12px; font-size: 0.9em;">
+                                            ❌ Cancelar
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn btn-secondary" onclick="viewJobDetails('${job.id}')" style="padding: 6px 12px; font-size: 0.9em;">
+                                        📄 Detalhes
+                                    </button>
+                                </div>
+                            </div>
+                            ${job.status === 'running' ? `
+                                <div class="job-progress">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-size: 0.9em; color: #666;">Em execução...</span>
+                                        <span style="font-size: 0.9em; color: #666;">${job.outputLines || 0} linhas de output</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${job.error ? `
+                                <div class="error-container" style="margin-top: 15px;">
+                                    <div class="error-title">❌ Erro no Job</div>
+                                    <div class="error-message">${job.error}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Erro ao carregar jobs:', error);
+                showError('errorJobsContainer', error, 'Background Jobs');
+                jobsContainer.innerHTML = '<div class="empty-state"><p>Erro ao carregar jobs</p></div>';
+            }
+        }
+
+        async function cancelJob(jobId) {
+            if (!confirm(`Tem certeza que deseja cancelar o job ${jobId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/jobs/${jobId}/cancel`, {
+                    method: 'POST'
+                });
+
+                // Se 404 ou 503, módulo não está disponível
+                if (response.status === 404 || response.status === 503) {
+                    alert('⚠️ Background Jobs não está disponível. O módulo não está carregado.');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success) {
+                    alert('✅ Job cancelado com sucesso');
+                    loadJobs();
+                } else {
+                    throw new Error(data.error || 'Erro ao cancelar job');
+                }
+            } catch (error) {
+                console.error('Erro ao cancelar job:', error);
+                showError('errorJobsContainer', error, 'Cancelar Job');
+            }
+        }
+
+        async function viewJobDetails(jobId) {
+            try {
+                const response = await fetch(`${API_BASE}/jobs/${jobId}`);
+                
+                // Se 404 ou 503, módulo não está disponível
+                if (response.status === 404 || response.status === 503) {
+                    alert('⚠️ Background Jobs não está disponível. O módulo não está carregado.');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success && data.job) {
+                    const job = data.job;
+                    const details = `
+                        <strong>ID:</strong> ${job.id}<br>
+                        <strong>Tipo:</strong> ${getJobTypeLabel(job.type)}<br>
+                        <strong>Status:</strong> ${getStatusLabel(job.status)}<br>
+                        <strong>Iniciado:</strong> ${new Date(job.startedAt).toLocaleString('pt-BR')}<br>
+                        ${job.completedAt ? `<strong>Concluído:</strong> ${new Date(job.completedAt).toLocaleString('pt-BR')}<br>` : ''}
+                        ${job.exitCode !== null ? `<strong>Exit Code:</strong> ${job.exitCode}<br>` : ''}
+                        ${job.error ? `<strong>Erro:</strong> ${job.error}<br>` : ''}
+                        ${job.outputLines ? `<strong>Output Lines:</strong> ${job.outputLines}<br>` : ''}
+                    `;
+                    alert(details);
+                } else {
+                    throw new Error(data.error || 'Job não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar detalhes do job:', error);
+                showError('errorJobsContainer', error, 'Detalhes do Job');
+            }
+        }
+
+        function getJobTypeLabel(type) {
+            const labels = {
+                'workflow': '🔄 Workflow',
+                'implementation': '⚙️ Implementação',
+                'test': '🧪 Teste'
+            };
+            return labels[type] || type;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'queued': '⏳ Na Fila',
+                'running': '🔄 Executando',
+                'completed': '✅ Concluído',
+                'failed': '❌ Falhou',
+                'cancelled': '🚫 Cancelado'
+            };
+            return labels[status] || status;
+        }
+
+        function formatDuration(seconds) {
+            if (seconds < 60) return `${seconds}s`;
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (minutes < 60) return `${minutes}m ${secs}s`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m ${secs}s`;
+        }
+
+        async function loadApprovals() {
+            const approvalsList = document.getElementById('approvalsList');
+            showSkeleton('approvalsList', 2);
+            setLastAction(() => loadApprovals());
+
+            try {
+                const response = await fetch(`${API_BASE}/approvals/pending`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.approvals && data.approvals.length > 0) {
+                    approvalsList.innerHTML = data.approvals.map(approval => `
+                        <div class="approval-item pending">
+                            <div class="approval-header">
+                                <div>
+                                    <div class="approval-title">
+                                        Decisão: <span class="status ${approval.decision.toLowerCase().replace(' ', '-')}">${approval.decision}</span>
+                                    </div>
+                                    <div class="approval-meta">
+                                        <div class="meta-item">📅 ${new Date(approval.timestamp).toLocaleString('pt-BR')}</div>
+                                        <div class="meta-item">🎯 Confiança: ${approval.confidence}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="score ${getScoreClass(approval.scores?.overall)}">
+                                Score: ${approval.scores?.overall || 0}/100
+                            </div>
+
+                            <div style="margin: 15px 0;">
+                                <strong>Justificativa:</strong>
+                                <p style="margin-top: 5px; color: #666;">${approval.justification}</p>
+                            </div>
+
+                            ${approval.concerns?.critical?.length > 0 ? `
+                                <div class="concerns-list">
+                                    <strong>🚨 Issues Críticos (${approval.concerns.critical.length}):</strong>
+                                    ${approval.concerns.critical.slice(0, 3).map(c => `
+                                        <div class="concern-item critical">
+                                            <span class="concern-priority">P0</span>
+                                            ${c.message}
+                                        </div>
+                                    `).join('')}
+                                    ${approval.concerns.critical.length > 3 ? `<p style="margin-top: 5px; color: #666;">... e mais ${approval.concerns.critical.length - 3} issues críticos</p>` : ''}
+                                </div>
+                            ` : ''}
+
+                            ${approval.concerns?.high?.length > 0 ? `
+                                <div class="concerns-list" style="margin-top: 10px;">
+                                    <strong>⚠️ Issues Alta Prioridade (${approval.concerns.high.length}):</strong>
+                                    ${approval.concerns.high.slice(0, 2).map(c => `
+                                        <div class="concern-item high">
+                                            <span class="concern-priority">P1</span>
+                                            ${c.message}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+
+                            ${(approval.decision === 'NO-GO' || approval.decision === 'NO') && approval.actionPlan ? `
+                                <div style="margin-top: 20px; padding: 20px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                    <h3 style="color: #1e40af; margin-bottom: 15px;">🎯 Plano de Ação: Como Transformar NO-GO em GO</h3>
+                                    <p style="margin-bottom: 15px; color: #1e3a8a;"><strong>Resumo:</strong> ${approval.actionPlan.summary}</p>
+                                    
+                                    <div style="margin-top: 15px;">
+                                        <strong style="color: #dc2626;">⚡ Ações Imediatas (${approval.actionPlan.priorities.immediate.length}):</strong>
+                                        ${approval.actionPlan.priorities.immediate.map((action, idx) => `
+                                            <div style="margin-top: 10px; padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #ef4444;">
+                                                <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${idx + 1}. ${action.title}</div>
+                                                <div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">${action.description}</div>
+                                                <div style="font-size: 0.85em; color: #666;">
+                                                    <span style="margin-right: 15px;">📊 Impacto: ${action.impact}</span>
+                                                    <span>⏱️ Esforço: ${action.effort}</span>
+                                                </div>
+                                                ${action.steps ? `
+                                                    <div style="margin-top: 8px; padding-left: 15px;">
+                                                        <strong style="font-size: 0.85em;">Passos:</strong>
+                                                        <ol style="margin: 5px 0; padding-left: 20px; font-size: 0.85em; color: #555;">
+                                                            ${action.steps.map(step => `<li>${step}</li>`).join('')}
+                                                        </ol>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                    ${approval.actionPlan.priorities.shortTerm.length > 0 ? `
+                                        <div style="margin-top: 15px;">
+                                            <strong style="color: #f59e0b;">📅 Curto Prazo (${approval.actionPlan.priorities.shortTerm.length}):</strong>
+                                            ${approval.actionPlan.priorities.shortTerm.map((action, idx) => `
+                                                <div style="margin-top: 10px; padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                                    <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${idx + 1}. ${action.title}</div>
+                                                    <div style="font-size: 0.9em; color: #666;">${action.description}</div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+
+                                    <div style="margin-top: 15px; padding: 12px; background: #dcfce7; border-radius: 6px;">
+                                        <strong style="color: #166534;">⏱️ Tempo Estimado:</strong> ${approval.actionPlan.estimatedTime.description}
+                                        <div style="margin-top: 8px; font-size: 0.9em; color: #166534;">
+                                            <strong>Metas de Score:</strong> 
+                                            Overall: ${approval.actionPlan.targetScore.overall}+ | 
+                                            Architecture: ${approval.actionPlan.targetScore.architecture}+ | 
+                                            Code Quality: ${approval.actionPlan.targetScore.codeQuality}+
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${(approval.decision === 'GO' || approval.decision === 'GO WITH CONCERNS') ? `
+                                <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+                                    <strong style="color: #166534;">✅ Esta decisão precisa de sua aprovação para prosseguir</strong>
+                                    <p style="margin-top: 8px; color: #166534; font-size: 0.9em;">
+                                        ${approval.decision === 'GO' 
+                                            ? 'A decisão é GO, mas ainda requer sua aprovação antes de prosseguir com as mudanças.' 
+                                            : 'A decisão é GO WITH CONCERNS. Você pode aprovar para prosseguir, mas deve estar ciente das preocupações identificadas.'}
+                                    </p>
+                                </div>
+                            ` : ''}
+
+                            <div class="actions">
+                                <button class="btn btn-success" onclick="approveDecision('${approval.id}')">
+                                    ✅ Aprovar
+                                </button>
+                                <button class="btn btn-danger" onclick="rejectDecision('${approval.id}')">
+                                    ❌ Rejeitar
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewDetails('${approval.id}')">
+                                    📄 Ver Detalhes
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    approvalsList.innerHTML = '<div class="empty-state"><p>Nenhuma aprovação pendente</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar aprovações:', error);
+                approvalsList.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-title">❌ Erro ao carregar aprovações</div>
+                        <div class="error-message">${error.message}</div>
+                        <div class="error-retry">
+                            <button class="btn btn-secondary" onclick="loadApprovals()">🔄 Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadBacklog() {
+            const backlogList = document.getElementById('backlogList');
+            showSkeleton('backlogList', 2);
+            setLastAction(() => loadBacklog());
+
+            try {
+                const response = await fetch(`${API_BASE}/approvals/backlog`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.backlog && data.backlog.length > 0) {
+                    backlogList.innerHTML = data.backlog.map(item => `
+                        <div class="approval-item">
+                            <div class="approval-header">
+                                <div>
+                                    <div class="approval-title">
+                                        ${item.decision} - <span class="status ${item.status}">${item.status}</span>
+                                    </div>
+                                    <div class="approval-meta">
+                                        <div class="meta-item">📅 ${new Date(item.timestamp).toLocaleString('pt-BR')}</div>
+                                        <div class="meta-item">👤 ${item.approvedBy || 'Sistema'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="score ${getScoreClass(item.scores?.overall)}">
+                                Score: ${item.scores?.overall || 0}/100
+                            </div>
+                            <p style="margin-top: 10px; color: #666;">${item.justification}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    backlogList.innerHTML = '<div class="empty-state"><p>Nenhum item no backlog</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar backlog:', error);
+                backlogList.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-title">❌ Erro ao carregar backlog</div>
+                        <div class="error-message">${error.message}</div>
+                        <div class="error-retry">
+                            <button class="btn btn-secondary" onclick="loadBacklog()">🔄 Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function approveDecision(id) {
+            if (!confirm('Tem certeza que deseja aprovar esta decisão?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/approvals/${id}/approve`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success) {
+                    alert('✅ Decisão aprovada com sucesso!');
+                    loadApprovals();
+                    loadBacklog();
+                    refreshStatus();
+                } else {
+                    throw new Error(data.error || 'Erro ao aprovar');
+                }
+            } catch (error) {
+                console.error('Erro ao aprovar decisão:', error);
+                // Mostrar erro na interface em vez de apenas alert
+                const errorContainer = document.createElement('div');
+                errorContainer.id = 'approvalError';
+                errorContainer.style.position = 'fixed';
+                errorContainer.style.top = '20px';
+                errorContainer.style.right = '20px';
+                errorContainer.style.zIndex = '10000';
+                document.body.appendChild(errorContainer);
+                showError('approvalError', error, 'Aprovar Decisão');
+                setTimeout(() => {
+                    if (errorContainer.parentNode) {
+                        errorContainer.parentNode.removeChild(errorContainer);
+                    }
+                }, 5000);
+            }
+        }
+
+        async function rejectDecision(id) {
+            const reason = prompt('Motivo da rejeição:');
+            if (!reason) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/approvals/${id}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (data.success) {
+                    alert('❌ Decisão rejeitada');
+                    loadApprovals();
+                    loadBacklog();
+                } else {
+                    throw new Error(data.error || 'Erro ao rejeitar');
+                }
+            } catch (error) {
+                console.error('Erro ao rejeitar decisão:', error);
+                // Mostrar erro na interface em vez de apenas alert
+                const errorContainer = document.createElement('div');
+                errorContainer.id = 'rejectionError';
+                errorContainer.style.position = 'fixed';
+                errorContainer.style.top = '20px';
+                errorContainer.style.right = '20px';
+                errorContainer.style.zIndex = '10000';
+                document.body.appendChild(errorContainer);
+                showError('rejectionError', error, 'Rejeitar Decisão');
+                setTimeout(() => {
+                    if (errorContainer.parentNode) {
+                        errorContainer.parentNode.removeChild(errorContainer);
+                    }
+                }, 5000);
+            }
+        }
+
+        function viewDetails(id) {
+            window.open(`${API_BASE}/approvals/${id}/report`, '_blank');
+        }
+
+        function viewLogs() {
+            const logsCard = document.getElementById('logsCard');
+            logsCard.style.display = logsCard.style.display === 'none' ? 'block' : 'none';
+            
+            if (logsCard.style.display === 'block') {
+                fetchLogs();
+            }
+        }
+
+        async function fetchLogs() {
+            const logsContainer = document.getElementById('logsContainer');
+            showLoading('logsContainer', 'Carregando logs...');
+            setLastAction(() => fetchLogs());
+
+            try {
+                const response = await fetch(`${API_BASE}/logs`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error(`Erro ao processar resposta JSON: ${jsonError.message}`);
+                }
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida do servidor');
+                }
+
+                if (!data.logs || data.logs.length === 0) {
+                    logsContainer.innerHTML = '<div class="empty-state"><p>Nenhum log disponível</p></div>';
+                    return;
+                }
+
+                logsContainer.innerHTML = data.logs.map(log => `
+                    <div class="log-line ${log.level}">
+                        [${new Date(log.timestamp).toLocaleTimeString()}] ${log.message}
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar logs:', error);
+                logsContainer.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-title">❌ Erro ao carregar logs</div>
+                        <div class="error-message">${error.message}</div>
+                        <div class="error-retry">
+                            <button class="btn btn-secondary" onclick="fetchLogs()">🔄 Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function getScoreClass(score) {
+            if (score >= 75) return 'high';
+            if (score >= 50) return 'medium';
+            return 'low';
+        }
+    </script>
+</body>
+</html>
+

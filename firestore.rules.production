@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regras de produção - restritivas e baseadas em autenticação
+    // ⚠️ Estas são as regras que devem ser usadas em produção
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    // Backlog - leitura pública, escrita autenticada
+    match /backlog/{backlogId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+      
+      // Validação de dados
+      allow create: if request.resource.data.keys().hasAll(['tasks', 'updatedAt']) &&
+                       request.resource.data.tasks is list;
+      allow update: if isAuthenticated();
+      allow delete: if hasRole('admin');
+    }
+    
+    // Results - leitura autenticada, escrita apenas do sistema
+    match /results/{resultId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Apenas via Cloud Functions
+    }
+    
+    // Decisions - leitura pública, escrita autenticada
+    match /decisions/{decisionId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+      
+      // Validação de dados
+      allow create: if request.resource.data.keys().hasAll(['decision', 'scores', 'timestamp']) &&
+                       request.resource.data.decision in ['GO', 'NO-GO', 'GO_WITH_CONCERNS'];
+      allow update: if isAuthenticated();
+      allow delete: if hasRole('admin');
+    }
+    
+    // Events - leitura autenticada, escrita apenas do sistema
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Apenas via Cloud Functions
+    }
+    
+    // Evaluations - leitura autenticada, escrita autenticada
+    match /evaluations/{evaluationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Implementations - leitura autenticada, escrita autenticada
+    match /implementations/{implementationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Maestro results (multi-projeto) - leitura autenticada, escrita autenticada
+    match /maestro/{projectId}/results/{resultId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Coleção de teste - negar tudo em produção
+    match /_test/{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Regra padrão - negar tudo que não corresponder às regras acima
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

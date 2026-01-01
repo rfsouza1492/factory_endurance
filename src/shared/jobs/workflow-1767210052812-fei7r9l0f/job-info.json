@@ -1,0 +1,15 @@
+{
+  "id": "workflow-1767210052812-fei7r9l0f",
+  "type": "workflow",
+  "status": "queued",
+  "startedAt": "2025-12-31T19:40:52.813Z",
+  "options": {
+    "phase": "all",
+    "env": {
+      "TEST_MODE": "true"
+    }
+  },
+  "output": [],
+  "error": null,
+  "exitCode": null
+}

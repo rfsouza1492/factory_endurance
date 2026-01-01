@@ -1,0 +1,12 @@
+{
+  "id": "workflow-1767207097988-l3khlug02",
+  "type": "workflow",
+  "status": "queued",
+  "startedAt": "2025-12-31T18:51:37.988Z",
+  "options": {
+    "phase": "execution"
+  },
+  "output": [],
+  "error": null,
+  "exitCode": null
+}

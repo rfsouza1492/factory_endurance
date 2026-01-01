@@ -1,0 +1,70 @@
+{
+  "name": "maestro-workflow",
+  "version": "2.0.0",
+  "description": "Sistema automatizado de coordenação de agentes especializados para avaliação e decisão Go/No-go",
+  "type": "module",
+  "main": "src/scripts/run-workflow.js",
+  "scripts": {
+    "maestro": "node src/scripts/run-workflow.js",
+    "maestro:workflow": "node src/scripts/run-workflow.js",
+    "maestro:execution": "node src/scripts/run-workflow.js --phase=execution",
+    "maestro:evaluation": "node src/scripts/run-workflow.js --phase=evaluation",
+    "maestro:decision": "node src/scripts/run-workflow.js --phase=decision",
+    "maestro:web": "node src/web/server.js",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:unit": "node tests/run-unit.js",
+    "test:integration": "node tests/run-integration.js",
+    "test:e2e": "node tests/run-e2e.js",
+    "test:pre-production": "node src/agents/test-execution-agent-cli.js",
+    "test:firestore-blindage": "node tests/unit/test-firestore-validator.js && node tests/test-firestore-blindage.js",
+    "test:workflow": "node tests/test-workflow.js",
+    "test:firebase": "node src/firebase/test-connection.js",
+    "test:firebase:integration": "node src/firebase/test-integration.js",
+    "test:watch": "npm test -- --watch",
+    "firebase:migrate": "node -e \"import('./src/firebase/migration.js').then(m => m.migrateFilesToFirestore())\"",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:emulators:ui": "firebase emulators:start --only ui",
+    "firebase:emulators:start": "bash scripts/firebase/start-emulators.sh",
+    "firebase:kill": "bash scripts/firebase/kill-emulators.sh",
+    "firebase:rules:deploy": "bash scripts/firebase/deploy-rules.sh",
+    "firebase:rules:deploy:dev": "bash scripts/firebase/deploy-rules.sh development",
+    "firebase:rules:deploy:prod": "bash scripts/firebase/deploy-rules.sh production",
+    "docs:update-index": "node docs/update-documentation-index.js",
+    "lint": "eslint src/**/*.js",
+    "lint:fix": "eslint src/**/*.js --fix"
+  },
+  "keywords": [
+    "workflow",
+    "agents",
+    "code-review",
+    "architecture",
+    "quality",
+    "automation",
+    "go-no-go",
+    "decision-making"
+  ],
+  "author": "Maestro Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "firebase": "^12.7.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/maestro-workflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/maestro-workflow/issues"
+  },
+  "homepage": "https://github.com/your-org/maestro-workflow#readme"
+}

@@ -1,0 +1,185 @@
+# Cursor Background Agent Rules - Maestro Workflow
+
+## 🎯 Contexto do Projeto
+
+Este é o **Maestro Workflow** - um sistema automatizado de coordenação de agentes especializados para avaliação e decisão Go/No-go.
+
+**Projeto Alvo:** `Agents/life-goals-app/`  
+**Workspace Root:** `/Users/rafaelsouza/Desktop/Tasks Man`
+
+---
+
+## 📋 Estrutura do Projeto
+
+```
+maestro-workflow/
+├── src/
+│   ├── agents/          # Agentes especializados
+│   ├── scripts/        # Lógica de workflow
+│   ├── shared/         # Dados compartilhados
+│   └── web/            # Interface web
+├── config/
+│   └── project-config.js  # Configuração centralizada
+└── docs/               # Documentação
+```
+
+---
+
+## 🔧 Configuração Centralizada
+
+**SEMPRE use a configuração centralizada:**
+
+```javascript
+import config from '../config/project-config.js';
+
+// Usar:
+config.PROJECT_DIR        // Agents/life-goals-app/
+config.WORKSPACE_ROOT     // /Users/rafaelsouza/Desktop/Tasks Man
+config.PROJECT_SRC_DIR    // Agents/life-goals-app/src/
+config.PROJECT_PACKAGE_JSON  // Agents/life-goals-app/package.json
+```
+
+**NÃO use caminhos hardcoded!**
+
+---
+
+## 🤖 Regras para Implementação de Agentes
+
+### 1. Estrutura Padrão
+
+Todos os agentes devem seguir esta estrutura:
+
+```javascript
+import config from '../../config/project-config.js';
+import fs from 'fs';
+import path from 'path';
+
+export async function run[NomeAgente]Analysis() {
+  // 1. Preparar ambiente
+  // 2. Executar análise
+  // 3. Processar resultados
+  // 4. Gerar relatório
+  // 5. Salvar resultados
+  // 6. Retornar estrutura padronizada
+}
+```
+
+### 2. Retorno Padronizado
+
+Todos os agentes devem retornar:
+
+```javascript
+{
+  success: true/false,
+  results: {
+    issues: {
+      critical: [],
+      high: [],
+      medium: [],
+      low: []
+    },
+    score: 0-100,
+    summary: "Resumo da análise",
+    // ... dados específicos do agente
+  }
+}
+```
+
+### 3. Salvamento de Resultados
+
+- Salvar em: `src/shared/results/[agente-dir]/[timestamp]-[tipo].md`
+- Formato: Markdown estruturado
+- Incluir: Score, Issues, Recomendações
+
+### 4. Uso de Configuração
+
+- **SEMPRE** importar `config` de `project-config.js`
+- **NUNCA** usar caminhos hardcoded
+- **SEMPRE** usar `config.PROJECT_DIR` para acessar o projeto
+
+---
+
+## 📚 Documentação de Referência
+
+Ao implementar agentes, consulte:
+
+1. **CURSOR_AGENT_IMPLEMENTATION.md** - Guia completo de implementação
+2. **PROCESS_MAPPING.md** - Processos detalhados de cada agente
+3. **PROJECT_CONFIGURATION.md** - Configuração do projeto
+4. **NEW_AGENTS_PROMPTS.md** - Prompts específicos para novos agentes
+
+---
+
+## ✅ Checklist de Implementação
+
+Ao criar/melhorar um agente:
+
+- [ ] Usa configuração centralizada (`project-config.js`)
+- [ ] Segue estrutura padrão de retorno
+- [ ] Salva resultados em formato padronizado
+- [ ] Gera relatório em Markdown
+- [ ] Inclui score (0-100)
+- [ ] Categoriza issues (critical, high, medium, low)
+- [ ] Testa execução isolada
+- [ ] Integra ao `run-workflow.js`
+
+---
+
+## 🎯 Agentes Existentes
+
+### Implementados:
+- ✅ Product Manager Agent
+- ✅ Architecture Review Agent
+- ✅ Code Quality Review Agent
+- ✅ Document Analysis Agent
+- ✅ Security Audit Agent
+- ✅ Performance Analysis Agent
+- ✅ Dependency Management Agent
+- ✅ Testing Coverage Agent
+- ✅ Accessibility Audit Agent
+- ✅ API Design Review Agent
+- ✅ Implementation Tracking Agent
+- ✅ Implementation Agent
+
+### Todos devem:
+- Usar `config.PROJECT_DIR` para acessar o projeto
+- Retornar estrutura padronizada
+- Salvar resultados em `src/shared/results/`
+- Gerar relatórios em Markdown
+
+---
+
+## 🔄 Workflow Integration
+
+Ao integrar um agente ao workflow:
+
+1. Importar função principal do agente
+2. Chamar em `phase1Execution()` em `run-workflow.js`
+3. Capturar resultado e adicionar a `executionResults`
+4. Atualizar `updateProgress()` para o agente
+5. Adicionar score ao `decision-logic.js` se necessário
+
+---
+
+## 📝 Convenções de Código
+
+- **ES Modules**: Use `import/export`
+- **Async/Await**: Prefira async/await sobre Promises
+- **Error Handling**: Sempre use try/catch
+- **Logging**: Use função `log()` do run-workflow.js
+- **Paths**: Sempre use `path.join()` para construir caminhos
+
+---
+
+## 🚫 O que NÃO fazer
+
+- ❌ Não usar caminhos hardcoded
+- ❌ Não usar `require()` (use `import`)
+- ❌ Não retornar estruturas diferentes do padrão
+- ❌ Não salvar resultados em locais diferentes
+- ❌ Não esquecer de atualizar `decision-logic.js` com novos scores
+
+---
+
+**Última Atualização**: 2025-12-30
+

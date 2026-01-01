@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "id": "life-goals-app",
+      "name": "Life Goals App",
+      "path": "Agents/life-goals-app",
+      "type": "react-app",
+      "status": "active",
+      "lastAnalysis": null,
+      "firebaseProjectId": "planning-with-ai-fa2a3",
+      "createdAt": "2025-12-31T00:00:00.000Z"
+    }
+  ],
+  "defaultProject": "life-goals-app"
+}
+
